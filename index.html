@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#0F1830" />
+<title>Goalbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1830;
+    --panel:#17223E;
+    --panel-hi:#1E2C4E;
+    --line: rgba(203,161,53,0.16);
+    --gold:#CBA135;
+    --gold-soft: rgba(203,161,53,0.14);
+    --green:#4FAE7B;
+    --green-soft: rgba(79,174,123,0.14);
+    --red:#E2574C;
+    --red-soft: rgba(226,87,76,0.14);
+    --text:#F4F1E8;
+    --muted:#93A0BE;
+    --muted-dim:#5D6A8C;
+    --radius: 16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display:flex;
+    flex-direction:column;
+    position: relative;
+    padding-bottom: 84px;
+    background:
+      radial-gradient(600px 300px at 50% -80px, rgba(203,161,53,0.10), transparent 70%),
+      var(--ink);
+  }
+  .num{ font-family:'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  header.top{
+    padding: 22px 20px 14px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  header.top .brand{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 22px;
+    letter-spacing: 0.2px;
+  }
+  header.top .brand .rupee{ color: var(--gold); }
+  header.top .tagline{ font-size: 11px; color: var(--muted-dim); text-transform: uppercase; letter-spacing: 1.2px; }
+
+  main{ flex:1; padding: 18px 16px 8px; }
+  .screen{ display:none; animation: fade .25s ease; }
+  .screen.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform: translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .card h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 16px;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding: 6px 0; }
+  .row .label{ color: var(--muted); font-size: 13.5px; }
+  .row .value{ font-size: 15px; font-weight:600; }
+
+  .alert-banner{
+    display:flex; gap:10px; align-items:flex-start;
+    background: var(--red-soft);
+    border: 1px solid rgba(226,87,76,0.4);
+    color: #FFD9D5;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .alert-banner.good{
+    background: var(--green-soft);
+    border-color: rgba(79,174,123,0.4);
+    color: #D6F2E3;
+  }
+  .alert-banner .icon{ font-size:18px; line-height:1; }
+
+  .hero-amount{
+    font-family:'Fraunces', serif;
+    font-size: 40px;
+    font-weight: 600;
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .hero-amount .sym{ font-size: 24px; color: var(--gold); }
+  .hero-sub{ color: var(--muted); font-size: 12.5px; margin-top:2px; }
+
+  .goal-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .goal-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .goal-name{ font-family:'Fraunces', serif; font-weight:600; font-size:16px; }
+  .goal-target{ color: var(--muted); font-size:12px; margin-top:2px; }
+
+  .passbook{
+    position: relative;
+    height: 14px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 3px, transparent 3px 9px);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .passbook .fill{
+    height:100%;
+    background: linear-gradient(90deg, #A9832A, var(--gold));
+    border-radius: 999px 0 0 999px;
+    transition: width .4s ease;
+  }
+  .goal-meta{ display:flex; justify-content:space-between; font-size:11.5px; color: var(--muted); margin-top:6px; }
+  .goal-meta .saved{ color:var(--gold); font-weight:600; }
+
+  .goal-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
+  .eta{ font-size:12.5px; color: var(--muted); }
+  .eta strong{ color: var(--text); }
+  .price-tag{ font-size: 11.5px; padding:4px 9px; border-radius:999px; font-weight:600; }
+  .price-tag.buy{ background: var(--green-soft); color:#B9EBCF; }
+  .price-tag.wait{ background: var(--red-soft); color:#FFC9C3; }
+  .price-tag.neutral{ background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  form .field{ margin-bottom: 14px; }
+  form label{ display:block; font-size:12px; color: var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.6px; }
+  input[type=text], input[type=number], input[type=date]{
+    width:100%;
+    background: var(--panel-hi);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 12px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  input[type=number]{ font-family:'JetBrains Mono', monospace; }
+  input:focus{ outline: none; border-color: var(--gold); }
+  input::placeholder{ color: var(--muted-dim); }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    background: var(--gold);
+    color: #221803;
+    font-weight: 700;
+    font-size: 14px;
+    border:none;
+    padding: 13px 18px;
+    border-radius: 12px;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn.ghost{
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-weight:600;
+  }
+  .btn.danger{ background: var(--red-soft); color:#FFC9C3; border:1px solid rgba(226,87,76,0.4); }
+  .btn.small{ width:auto; padding:9px 14px; font-size:12.5px; }
+
+  .expense-row, .price-row{
+    display:flex; align-items:center; gap:10px; padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .expense-row:last-child, .price-row:last-child{ border-bottom:none; }
+  .expense-row .name, .price-row .date{ flex:1; color: var(--text); }
+  .expense-row .amt, .price-row .amt{ font-weight:600; }
+  .del-btn{
+    background:none; border:none; color: var(--muted-dim); cursor:pointer; font-size:16px; padding:4px 6px;
+  }
+  .del-btn:hover{ color: var(--red); }
+
+  .empty{
+    text-align:center; padding: 30px 14px; color: var(--muted); font-size:13.5px; line-height:1.6;
+  }
+  .empty .glyph{ font-size:26px; margin-bottom:8px; }
+
+  nav.tabs{
+    position: fixed;
+    bottom:0; left:0; right:0;
+    max-width:480px; margin:0 auto;
+    background: rgba(15,24,48,0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    display:flex;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  nav.tabs button{
+    flex:1; background:none; border:none; color: var(--muted-dim);
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding: 6px 2px; font-size: 10.5px; font-weight:600; letter-spacing:0.3px;
+    cursor:pointer; font-family: inherit; text-transform:uppercase;
+  }
+  nav.tabs button .ic{ font-size:18px; }
+  nav.tabs button.active{ color: var(--gold); }
+
+  .segrow{ display:flex; gap:8px; }
+  .segrow > *{ flex:1; }
+
+  .list-add{ display:flex; gap:8px; margin-top: 4px; }
+  .list-add input{ flex:1; }
+  .add-icon-btn{
+    background: var(--gold); color:#221803; border:none; width:44px; border-radius:10px; font-size:20px; font-weight:700; cursor:pointer;
+  }
+
+  .toast{
+    position: fixed; bottom: 96px; left:50%; transform: translateX(-50%);
+    background: var(--panel-hi); border:1px solid var(--line); color: var(--text);
+    padding: 10px 16px; border-radius: 10px; font-size:13px; z-index:50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity:0; pointer-events:none; transition: opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(-4px); }
+
+  .subtle-link{ color: var(--gold); font-size: 12.5px; text-decoration:none; text-align:center; display:block; margin-top:2px; }
+  .divider-label{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color: var(--muted-dim); margin: 18px 0 8px 2px; }
+  .loading-shell{ display:flex; align-items:center; justify-content:center; min-height:60vh; color: var(--muted); font-size:13px; }
+</style>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div>
+      <div class="brand"><span class="rupee">₹</span>Goalbook</div>
+      <div class="tagline">spend less, get there sooner</div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="loading-shell" id="loadingShell">Opening your ledger…</div>
+  </main>
+
+  <nav class="tabs" id="tabs" style="display:none;">
+    <button data-screen="home" class="active"><span class="ic">🏠</span>Home</button>
+    <button data-screen="goals"><span class="ic">🎯</span>Goals</button>
+    <button data-screen="log"><span class="ic">✍️</span>Log</button>
+    <button data-screen="settings"><span class="ic">⚙️</span>Setup</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  const INR = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const todayISO = () => new Date().toISOString().slice(0,10);
+  const uid = () => Math.random().toString(36).slice(2,10);
+
+  let profile = { salary: 0, expenses: [], weeklyBudget: null };
+  let goals = [];
+  let spendlog = [];
+
+  const STORE = {
+    async get(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      }catch(e){
+        console.error('storage get failed', e);
+        return fallback;
+      }
+    },
+    async set(key, value){
+      try{
+        localStorage.setItem(key, JSON.stringify(value));
+      }catch(e){
+        console.error('storage set failed', key, e);
+        toast('Could not save — storage unavailable');
+      }
+    }
+  };
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h = setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  // ---------- derived math ----------
+  function totalExpenses(){ return profile.expenses.reduce((s,e)=>s+Number(e.amount||0),0); }
+  function monthlyLeftover(){ return Math.max(0, Number(profile.salary||0) - totalExpenses()); }
+  function autoWeeklyBudget(){ return monthlyLeftover() / 4.345; }
+  function weeklyBudget(){ return profile.weeklyBudget != null ? Number(profile.weeklyBudget) : autoWeeklyBudget(); }
+
+  function startOfWeek(d){
+    const dt = new Date(d);
+    const day = (dt.getDay()+6)%7; // Monday=0
+    dt.setHours(0,0,0,0);
+    dt.setDate(dt.getDate()-day);
+    return dt;
+  }
+  function weekKey(dateStr){ return startOfWeek(dateStr).toISOString().slice(0,10); }
+
+  function currentWeekSpend(){
+    const wk = weekKey(new Date());
+    return spendlog.filter(e => weekKey(e.date) === wk).reduce((s,e)=>s+Number(e.amount||0),0);
+  }
+
+  function activeGoals(){ return goals; }
+
+  // total net-saved-weeks since a goal's creation, using actual spend history, allocated by pct
+  function goalProgress(goal){
+    const budget = weeklyBudget();
+    if(goals.length===0) return {saved:0, weeksElapsed:0};
+    const pct = (Number(goal.allocationPct||0))/100;
+    const created = startOfWeek(goal.createdAt);
+    const now = startOfWeek(new Date());
+    // build set of week keys from creation to now (inclusive), weekly
+    let cursor = new Date(created);
+    let totalNet = 0;
+    let weeksElapsed = 0;
+    while(cursor <= now){
+      const wk = cursor.toISOString().slice(0,10);
+      const spend = spendlog.filter(e=>weekKey(e.date)===wk).reduce((s,e)=>s+Number(e.amount||0),0);
+      totalNet += (budget - spend);
+      weeksElapsed++;
+      cursor.setDate(cursor.getDate()+7);
+    }
+    const saved = Math.max(0, totalNet * pct);
+    return { saved, weeksElapsed };
+  }
+
+  function goalWeeklySavingsRate(goal){
+    const pct = (Number(goal.allocationPct||0))/100;
+    return weeklyBudget() * pct; // ideal rate if on-budget every week
+  }
+
+  function goalETA(goal){
+    const { saved } = goalProgress(goal);
+    const remaining = Math.max(0, Number(goal.targetPrice||0) - saved);
+    const rate = goalWeeklySavingsRate(goal);
+    if(remaining <= 0) return { weeks: 0, saved, remaining: 0 };
+    if(rate <= 0) return { weeks: Infinity, saved, remaining };
+    return { weeks: remaining/rate, saved, remaining };
+  }
+
+  function fmtWeeks(w){
+    if(w === Infinity) return 'no active savings rate';
+    if(w <= 0) return 'goal reached';
+    if(w < 1) return 'under a week';
+    const wk = Math.round(w);
+    if(wk < 5) return wk + ' week' + (wk===1?'':'s');
+    const months = Math.round(wk/4.345*10)/10;
+    return months + ' month' + (months===1?'':'s');
+  }
+
+  function priceAdvice(goal){
+    const hist = (goal.priceHistory||[]).slice().sort((a,b)=> a.date < b.date ? -1 : 1);
+    if(hist.length < 2) return { tag:'neutral', text:'Log a couple more prices to see a trend' };
+    const prices = hist.map(h=>Number(h.price));
+    const lowest = Math.min(...prices);
+    const current = prices[prices.length-1];
+    if(current <= lowest * 1.03){
+      return { tag:'buy', text:'At or near the lowest price you\'ve seen — good time to buy' };
+    }
+    const recent = prices.slice(-3);
+    let trend = 'flat';
+    if(recent.length>=2){
+      if(recent[recent.length-1] < recent[0]) trend = 'down';
+      else if(recent[recent.length-1] > recent[0]) trend = 'up';
+    }
+    const pctAboveLow = Math.round(((current-lowest)/lowest)*100);
+    if(trend==='down') return { tag:'wait', text:`Trending down, ${pctAboveLow}% above its lowest — might pay to wait` };
+    if(trend==='up') return { tag:'wait', text:`Trending up, ${pctAboveLow}% above its lowest — waiting may cost more` };
+    return { tag:'neutral', text:`Stable lately, ${pctAboveLow}% above its lowest recorded price` };
+  }
+
+  // ---------- rendering ----------
+  let currentScreen = 'home';
+
+  function render(){
+    const main = document.getElementById('main');
+    if(currentScreen==='home') main.innerHTML = renderHome();
+    else if(currentScreen==='goals') main.innerHTML = renderGoals();
+    else if(currentScreen==='log') main.innerHTML = renderLog();
+    else if(currentScreen==='settings') main.innerHTML = renderSettings();
+    bindScreenEvents();
+  }
+
+  function renderHome(){
+    const budget = weeklyBudget();
+    const spend = currentWeekSpend();
+    const diff = budget - spend;
+    const overspent = diff < -0.5;
+    const needsSetup = !profile.salary;
+
+    let banner = '';
+    if(needsSetup){
+      banner = `<div class="alert-banner"><span class="icon">👋</span><div>Start in <b>Setup</b> — add your salary and monthly expenses so Goalbook knows your weekly budget.</div></div>`;
+    } else if(overspent){
+      const overAmt = Math.abs(diff);
+      const delayDays = Math.round((overAmt/Math.max(budget,1))*7*10)/10;
+      banner = `<div class="alert-banner"><span class="icon">⚠️</span><div><b>${INR(overAmt)} over budget</b> this week.
+        ${goals.length ? `That pushes your goal${goals.length>1?'s':''} back by roughly <b>${delayDays} day${delayDays===1?'':'s'}</b> at your current savings rate.` : 'Add a goal to see exactly how this affects your timeline.'}</div></div>`;
+    } else if(spend > 0){
+      const under = diff;
+      banner = `<div class="alert-banner good"><span class="icon">✅</span><div>You're <b>${INR(under)} under budget</b> this week — nice, that's extra speed toward your goal${goals.length>1?'s':''}.</div></div>`;
+    }
+
+    let goalsHtml = '';
+    if(goals.length){
+      goalsHtml = goals.slice(0,3).map(g=>{
+        const { saved } = goalProgress(g);
+        const target = Number(g.targetPrice||0);
+        const pctDone = target>0 ? Math.min(100, Math.round((saved/target)*100)) : 0;
+        const eta = goalETA(g);
+        return `<div class="goal-card">
+          <div class="goal-top">
+            <div><div class="goal-name">${escapeHtml(g.name)}</div><div class="goal-target">Target ${INR(target)}</div></div>
+            <div class="num" style="color:var(--gold); font-weight:700;">${pctDone}%</div>
+          </div>
+          <div class="passbook"><div class="fill" style="width:${pctDone}%"></div></div>
+          <div class="goal-meta"><span class="saved num">${INR(saved)} saved</span><span>${INR(Math.max(0,target-saved))} to go</span></div>
+          <div class="goal-footer">
+            <div class="eta">${eta.weeks===0 ? '🎉 goal reached' : `Est. <strong>${fmtWeeks(eta.weeks)}</strong> away`}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      goalsHtml = `<div class="empty"><div class="glyph">🎯</div>No goals yet.<br>Add one in the Goals tab to start tracking.</div>`;
+    }
+
+    return `
+      ${banner}
+      <div class="card">
+        <h2>This week</h2>
+        <div class="hero-amount"><span class="sym">₹</span>${Math.round(spend).toLocaleString('en-IN')}</div>
+        <div class="hero-sub">spent of your ${INR(budget)} weekly budget</div>
+        <div class="passbook" style="margin-top:14px;"><div class="fill" style="width:${Math.min(100,(spend/Math.max(budget,1))*100)}%; background:${overspent?'linear-gradient(90deg,#8C2A22,var(--red))':'linear-gradient(90deg,#A9832A,var(--gold))'}"></div></div>
+      </div>
+      <div class="divider-label">Your goals</div>
+      ${goalsHtml}
+    `;
+  }
+
+  function renderGoals(){
+    const list = goals.map(g=>{
+      const { saved } = goalProgress(g);
+      const target = Number(g.targetPrice||0);
+      const pctDone = target>0 ? Math.min(100, Math.round((saved/target)*100)) : 0;
+      const eta = goalETA(g);
+      const adv = priceAdvice(g);
+      const hist = (g.priceHistory||[]).slice().sort((a,b)=> a.date<b.date?1:-1);
+      return `<div class="goal-card">
+        <div class="goal-top">
+          <div><div class="goal-name">${escapeHtml(g.name)}</div><div class="goal-target">Target ${INR(target)} · ${g.allocationPct}% of weekly budget</div></div>
+          <button class="del-btn" data-del-goal="${g.id}">✕</button>
+        </div>
+        <div class="passbook"><div class="fill" style="width:${pctDone}%"></div></div>
+        <div class="goal-meta"><span class="saved num">${INR(saved)} saved (${pctDone}%)</span><span>${eta.weeks===0?'reached':fmtWeeks(eta.weeks)+' left'}</span></div>
+        <div class="goal-footer">
+          <span class="price-tag ${adv.tag}">${adv.text}</span>
+        </div>
+        <div class="divider-label" style="margin:14px 0 6px;">Price log</div>
+        ${hist.length ? hist.slice(0,4).map(h=>`<div class="price-row"><span class="date">${h.date}</span><span class="amt num">${INR(h.price)}</span></div>`).join('') : '<div style="font-size:12.5px;color:var(--muted-dim);padding:4px 0;">No prices logged yet</div>'}
+        <div class="list-add">
+          <input type="number" placeholder="Price seen today" id="price-${g.id}" />
+          <button class="add-icon-btn" data-log-price="${g.id}">+</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="card">
+        <h2>New goal</h2>
+        <form id="goalForm">
+          <div class="field"><label>What are you saving for</label><input type="text" id="gName" placeholder="e.g. iPhone 17" required /></div>
+          <div class="field"><label>Target price</label><input type="number" id="gPrice" placeholder="e.g. 79900" required /></div>
+          <div class="field"><label>Share of weekly budget for this goal (%)</label><input type="number" id="gPct" placeholder="e.g. 100" value="${goals.length? Math.round(100/(goals.length+1)) : 100}" required /></div>
+          <button type="submit" class="btn">Add goal</button>
+        </form>
+      </div>
+      <div class="divider-label">Tracking (${goals.length})</div>
+      ${goals.length ? list : '<div class="empty"><div class="glyph">🧾</div>Nothing here yet — add your first goal above.</div>'}
+    `;
+  }
+
+  function renderLog(){
+    const recent = spendlog.slice().sort((a,b)=> a.date<b.date?1:-1).slice(0,12);
+    const wk = weekKey(new Date());
+    const weekTotal = currentWeekSpend();
+    return `
+      <div class="card">
+        <h2>Log a spend</h2>
+        <div class="hero-sub" style="margin-bottom:12px;">This is extra / discretionary spending — outside your fixed monthly expenses.</div>
+        <form id="logForm">
+          <div class="segrow">
+            <div class="field"><label>Amount</label><input type="number" id="lAmt" placeholder="₹" required /></div>
+            <div class="field"><label>Date</label><input type="date" id="lDate" value="${todayISO()}" required /></div>
+          </div>
+          <div class="field"><label>What for (optional)</label><input type="text" id="lNote" placeholder="e.g. dinner out" /></div>
+          <button type="submit" class="btn">Add to log</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="row"><span class="label">This week's total</span><span class="value num">${INR(weekTotal)}</span></div>
+      </div>
+      <div class="divider-label">Recent entries</div>
+      ${recent.length ? recent.map(e=>`<div class="expense-row"><span class="name">${e.note?escapeHtml(e.note):'Spend'} <span style="color:var(--muted-dim); font-size:11.5px;">· ${e.date}</span></span><span class="amt num">${INR(e.amount)}</span><button class="del-btn" data-del-spend="${e.id}">✕</button></div>`).join('') : '<div class="empty"><div class="glyph">✍️</div>No spending logged yet.</div>'}
+    `;
+  }
+
+  function renderSettings(){
+    const exp = profile.expenses||[];
+    return `
+      <div class="card">
+        <h2>Income</h2>
+        <div class="field"><label>Monthly salary</label><input type="number" id="salaryInput" value="${profile.salary||''}" placeholder="e.g. 60000" /></div>
+      </div>
+      <div class="card">
+        <h2>Fixed monthly expenses</h2>
+        ${exp.length ? exp.map(e=>`<div class="expense-row"><span class="name">${escapeHtml(e.name)}</span><span class="amt num">${INR(e.amount)}</span><button class="del-btn" data-del-exp="${e.id}">✕</button></div>`).join('') : '<div style="font-size:12.5px;color:var(--muted-dim);">Rent, EMIs, subscriptions, groceries — anything recurring.</div>'}
+        <div class="list-add" style="margin-top:12px;">
+          <input type="text" id="expName" placeholder="Name" style="flex:1.4;" />
+          <input type="number" id="expAmt" placeholder="₹/mo" />
+          <button class="add-icon-btn" id="addExpBtn">+</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Weekly budget</h2>
+        <div class="row"><span class="label">Monthly leftover</span><span class="value num">${INR(monthlyLeftover())}</span></div>
+        <div class="row"><span class="label">Auto weekly budget</span><span class="value num">${INR(autoWeeklyBudget())}</span></div>
+        <div class="field" style="margin-top:10px;"><label>Override (optional)</label><input type="number" id="wbOverride" value="${profile.weeklyBudget!=null?profile.weeklyBudget:''}" placeholder="Leave blank to use auto" /></div>
+        <button class="btn ghost" id="saveWbBtn" style="margin-top:4px;">Save budget</button>
+      </div>
+      <div class="card">
+        <button class="btn danger" id="resetBtn">Reset all data</button>
+      </div>
+    `;
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function bindScreenEvents(){
+    if(currentScreen==='goals'){
+      const f = document.getElementById('goalForm');
+      if(f) f.addEventListener('submit', async (ev)=>{
+        ev.preventDefault();
+        const name = document.getElementById('gName').value.trim();
+        const price = Number(document.getElementById('gPrice').value);
+        const pct = Number(document.getElementById('gPct').value);
+        if(!name || !price) return;
+        goals.push({ id: uid(), name, targetPrice: price, allocationPct: pct, createdAt: todayISO(), priceHistory: [] });
+        await STORE.set('goals', goals);
+        toast('Goal added');
+        render();
+      });
+      document.querySelectorAll('[data-del-goal]').forEach(b=>b.addEventListener('click', async ()=>{
+        goals = goals.filter(g=>g.id!==b.dataset.delGoal);
+        await STORE.set('goals', goals);
+        render();
+      }));
+      document.querySelectorAll('[data-log-price]').forEach(b=>b.addEventListener('click', async ()=>{
+        const id = b.dataset.logPrice;
+        const input = document.getElementById('price-'+id);
+        const price = Number(input.value);
+        if(!price) return;
+        const g = goals.find(x=>x.id===id);
+        g.priceHistory = g.priceHistory||[];
+        g.priceHistory.push({ date: todayISO(), price });
+        await STORE.set('goals', goals);
+        toast('Price logged');
+        render();
+      }));
+    }
+    if(currentScreen==='log'){
+      const f = document.getElementById('logForm');
+      if(f) f.addEventListener('submit', async (ev)=>{
+        ev.preventDefault();
+        const amount = Number(document.getElementById('lAmt').value);
+        const date = document.getElementById('lDate').value || todayISO();
+        const note = document.getElementById('lNote').value.trim();
+        if(!amount) return;
+        spendlog.push({ id: uid(), amount, date, note });
+        await STORE.set('spendlog', spendlog);
+        toast('Logged');
+        render();
+      });
+      document.querySelectorAll('[data-del-spend]').forEach(b=>b.addEventListener('click', async ()=>{
+        spendlog = spendlog.filter(e=>e.id!==b.dataset.delSpend);
+        await STORE.set('spendlog', spendlog);
+        render();
+      }));
+    }
+    if(currentScreen==='settings'){
+      const salaryInput = document.getElementById('salaryInput');
+      salaryInput.addEventListener('change', async ()=>{
+        profile.salary = Number(salaryInput.value)||0;
+        await STORE.set('profile', profile);
+        toast('Saved');
+        render();
+      });
+      document.getElementById('addExpBtn').addEventListener('click', async ()=>{
+        const name = document.getElementById('expName').value.trim();
+        const amt = Number(document.getElementById('expAmt').value);
+        if(!name || !amt) return;
+        profile.expenses.push({ id: uid(), name, amount: amt });
+        await STORE.set('profile', profile);
+        render();
+      });
+      document.querySelectorAll('[data-del-exp]').forEach(b=>b.addEventListener('click', async ()=>{
+        profile.expenses = profile.expenses.filter(e=>e.id!==b.dataset.delExp);
+        await STORE.set('profile', profile);
+        render();
+      }));
+      document.getElementById('saveWbBtn').addEventListener('click', async ()=>{
+        const v = document.getElementById('wbOverride').value;
+        profile.weeklyBudget = v==='' ? null : Number(v);
+        await STORE.set('profile', profile);
+        toast('Budget saved');
+        render();
+      });
+      document.getElementById('resetBtn').addEventListener('click', async ()=>{
+        if(!confirm('This clears all salary, goals and spending data. Continue?')) return;
+        profile = { salary:0, expenses:[], weeklyBudget:null };
+        goals = [];
+        spendlog = [];
+        await Promise.all([STORE.set('profile',profile), STORE.set('goals',goals), STORE.set('spendlog',spendlog)]);
+        toast('All data cleared');
+        render();
+      });
+    }
+  }
+
+  function switchScreen(name){
+    currentScreen = name;
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.screen===name));
+    render();
+    document.getElementById('main').scrollTop = 0;
+    window.scrollTo(0,0);
+  }
+
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.addEventListener('click', ()=>switchScreen(b.dataset.screen));
+  });
+
+  async function init(){
+    const [p, g, s] = await Promise.all([
+      STORE.get('profile', { salary:0, expenses:[], weeklyBudget:null }),
+      STORE.get('goals', []),
+      STORE.get('spendlog', [])
+    ]);
+    profile = p; goals = g; spendlog = s;
+    document.getElementById('tabs').style.display = 'flex';
+    render();
+  }
+
+  init();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
+}
+</script>
+</body>
+</html>
